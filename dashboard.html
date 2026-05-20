@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sydney Traffic Analysis — Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1117;
+    --card: #1a1d27;
+    --border: #2a2d3a;
+    --text: #e1e4ed;
+    --muted: #8b8fa3;
+    --accent: #6c63ff;
+    --accent2: #00d4aa;
+    --accent3: #ff6b6b;
+    --accent4: #ffd93d;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .hero {
+    text-align: center;
+    padding: 60px 20px 40px;
+    background: linear-gradient(135deg, #1a1d27 0%, #0f1117 50%, #1a1025 100%);
+    border-bottom: 1px solid var(--border);
+  }
+  .hero h1 {
+    font-size: 2.4rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #6c63ff, #00d4aa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+  .hero p { color: var(--muted); font-size: 1.1rem; max-width: 600px; margin: 0 auto; }
+  .stats-bar {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    padding: 24px 20px;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .stat { text-align: center; }
+  .stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .stat-value.green { color: var(--accent2); }
+  .stat-value.red { color: var(--accent3); }
+  .stat-value.yellow { color: var(--accent4); }
+  .stat-label { font-size: 0.85rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 30px 20px; }
+
+  .section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .grid { display: grid; gap: 24px; margin-bottom: 40px; }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-1 { grid-template-columns: 1fr; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    transition: border-color 0.2s;
+  }
+  .card:hover { border-color: var(--accent); }
+  .card h3 {
+    font-size: 1rem;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+  .card .subtitle {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+  .chart-wrap { position: relative; width: 100%; }
+
+  .arch-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    margin-bottom: 40px;
+  }
+  .arch-section h3 { font-size: 1.2rem; margin-bottom: 20px; text-align: center; }
+  .pipeline {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    flex-wrap: wrap;
+    padding: 10px 0;
+  }
+  .pipe-step {
+    text-align: center;
+    padding: 16px 20px;
+    border-radius: 10px;
+    min-width: 140px;
+    position: relative;
+  }
+  .pipe-step .icon { font-size: 1.8rem; margin-bottom: 6px; }
+  .pipe-step .label { font-size: 0.85rem; font-weight: 600; }
+  .pipe-step .detail { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+  .pipe-arrow {
+    font-size: 1.5rem;
+    color: var(--accent);
+    padding: 0 4px;
+    flex-shrink: 0;
+  }
+  .step-ingest { background: rgba(108,99,255,0.15); border: 1px solid rgba(108,99,255,0.3); }
+  .step-store { background: rgba(0,212,170,0.15); border: 1px solid rgba(0,212,170,0.3); }
+  .step-process { background: rgba(255,217,61,0.15); border: 1px solid rgba(255,217,61,0.3); }
+  .step-enrich { background: rgba(255,107,107,0.15); border: 1px solid rgba(255,107,107,0.3); }
+  .step-output { background: rgba(108,99,255,0.15); border: 1px solid rgba(108,99,255,0.3); }
+
+  .tech-tags {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+  }
+  .tag {
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: rgba(108,99,255,0.15);
+    color: var(--accent);
+    border: 1px solid rgba(108,99,255,0.3);
+  }
+
+  .footer {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--muted);
+    font-size: 0.85rem;
+    border-top: 1px solid var(--border);
+  }
+  .footer a { color: var(--accent); text-decoration: none; }
+
+  @media (max-width: 768px) {
+    .grid-2 { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 1.6rem; }
+    .stats-bar { gap: 20px; }
+    .stat-value { font-size: 1.3rem; }
+    .pipeline { flex-direction: column; }
+    .pipe-arrow { transform: rotate(90deg); }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>Sydney Traffic Analysis</h1>
+  <p>Big Data pipeline analysing NSW road traffic patterns (2006–2025) with PySpark on HDFS, orchestrated via Docker</p>
+</div>
+
+<div class="stats-bar">
+  <div class="stat">
+    <div class="stat-value">3.9M</div>
+    <div class="stat-label">Raw Records</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value green">711</div>
+    <div class="stat-label">Traffic Stations</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value red">19 yrs</div>
+    <div class="stat-label">Date Range</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value yellow">61,450</div>
+    <div class="stat-label">Curated Records</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Architecture -->
+  <div class="arch-section">
+    <h3>Pipeline Architecture</h3>
+    <div class="pipeline">
+      <div class="pipe-step step-ingest">
+        <div class="icon">📥</div>
+        <div class="label">Ingest</div>
+        <div class="detail">4 CSV files + station ref</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step step-store">
+        <div class="icon">🗄️</div>
+        <div class="label">HDFS</div>
+        <div class="detail">NameNode + DataNode</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step step-process">
+        <div class="icon">⚡</div>
+        <div class="label">PySpark</div>
+        <div class="detail">Clean + Aggregate</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step step-enrich">
+        <div class="icon">🔗</div>
+        <div class="label">Enrich</div>
+        <div class="detail">Join station metadata</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step step-output">
+        <div class="icon">📊</div>
+        <div class="label">Analytics</div>
+        <div class="detail">SQL queries + viz</div>
+      </div>
+    </div>
+    <div class="tech-tags">
+      <span class="tag">Python</span>
+      <span class="tag">PySpark</span>
+      <span class="tag">HDFS</span>
+      <span class="tag">Docker Compose</span>
+      <span class="tag">Jupyter</span>
+      <span class="tag">Spark SQL</span>
+      <span class="tag">Google Cloud VM</span>
+    </div>
+  </div>
+
+  <!-- Charts Row 1 -->
+  <div class="section-title">Regional Analysis</div>
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Urban Pressure Score</h3>
+      <div class="subtitle">Composite of load per station × lane efficiency (2023–2025)</div>
+      <div class="chart-wrap"><canvas id="chartPressure"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Lane Efficiency by Region</h3>
+      <div class="subtitle">Average monthly volume per lane across all stations</div>
+      <div class="chart-wrap"><canvas id="chartLane"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Charts Row 2 -->
+  <div class="section-title">Trends & Seasonality</div>
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Long-term Traffic Growth</h3>
+      <div class="subtitle">Percentage growth from first to last recorded month per region</div>
+      <div class="chart-wrap"><canvas id="chartGrowth"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Seasonal Peaks by Region</h3>
+      <div class="subtitle">Top-3 highest-volume months for each region</div>
+      <div class="chart-wrap"><canvas id="chartSeason"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Charts Row 3 -->
+  <div class="section-title">Station Distribution</div>
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Stations per Region</h3>
+      <div class="subtitle">Number of permanent counting stations by RMS region</div>
+      <div class="chart-wrap"><canvas id="chartStations"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Data Pipeline Summary</h3>
+      <div class="subtitle">Records at each stage of the ETL pipeline</div>
+      <div class="chart-wrap"><canvas id="chartPipeline"></canvas></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  Built by <strong>Catherine Varas</strong> — <a href="https://github.com/CateHey" target="_blank">github.com/CateHey</a>
+  <br>Data source: NSW Open Data Portal · Road Traffic Counts (2006–2025)
+</div>
+
+<script>
+const COLORS = {
+  purple: '#6c63ff',
+  green: '#00d4aa',
+  red: '#ff6b6b',
+  yellow: '#ffd93d',
+  blue: '#4ea8de',
+  orange: '#ff922b',
+};
+
+const chartDefaults = {
+  responsive: true,
+  maintainAspectRatio: true,
+  plugins: {
+    legend: { labels: { color: '#8b8fa3', font: { size: 11 } } },
+  },
+  scales: {
+    x: { ticks: { color: '#8b8fa3' }, grid: { color: 'rgba(42,45,58,0.6)' } },
+    y: { ticks: { color: '#8b8fa3' }, grid: { color: 'rgba(42,45,58,0.6)' } },
+  },
+};
+
+// Q2: Urban Pressure Score
+new Chart(document.getElementById('chartPressure'), {
+  type: 'bar',
+  data: {
+    labels: ['Sydney', 'Hunter', 'Southern', 'South West', 'Western'],
+    datasets: [{
+      label: 'Pressure Score (M)',
+      data: [7962905, 3519764, 1072075, 812180, 431703],
+      backgroundColor: [COLORS.red, COLORS.orange, COLORS.yellow, COLORS.green, COLORS.blue],
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    ...chartDefaults,
+    indexAxis: 'y',
+    plugins: {
+      ...chartDefaults.plugins,
+      legend: { display: false },
+    },
+    scales: {
+      ...chartDefaults.scales,
+      x: { ...chartDefaults.scales.x, title: { display: true, text: 'Pressure Score', color: '#8b8fa3' } },
+    },
+  }
+});
+
+// Q4: Lane Efficiency
+new Chart(document.getElementById('chartLane'), {
+  type: 'bar',
+  data: {
+    labels: ['Sydney', 'Hunter', 'Southern', 'Northern', 'South West'],
+    datasets: [
+      {
+        label: 'Avg Volume/Lane',
+        data: [993057, 528337, 315900, 233079, 140518],
+        backgroundColor: COLORS.purple + 'cc',
+        borderRadius: 6,
+      },
+      {
+        label: 'Peak Volume/Lane',
+        data: [4938927, 2587643, 2499272, 2164247, 502292],
+        backgroundColor: COLORS.green + '88',
+        borderRadius: 6,
+      }
+    ]
+  },
+  options: chartDefaults,
+});
+
+// Q1: Growth
+new Chart(document.getElementById('chartGrowth'), {
+  type: 'bar',
+  data: {
+    labels: ['South West', 'Western', 'Northern', 'Sydney', 'Hunter', 'Southern'],
+    datasets: [{
+      label: 'Growth %',
+      data: [50229100, 38539900, 554835, 350000, 280000, 190000],
+      backgroundColor: [COLORS.red, COLORS.orange, COLORS.yellow, COLORS.purple, COLORS.blue, COLORS.green],
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    ...chartDefaults,
+    plugins: {
+      ...chartDefaults.plugins,
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: ctx => `Growth: ${(ctx.raw / 1e6).toFixed(1)}M%`
+        }
+      }
+    },
+    scales: {
+      ...chartDefaults.scales,
+      y: {
+        ...chartDefaults.scales.y,
+        title: { display: true, text: 'Growth (%)', color: '#8b8fa3' },
+        ticks: {
+          ...chartDefaults.scales.y.ticks,
+          callback: v => (v / 1e6).toFixed(0) + 'M'
+        }
+      },
+    },
+  }
+});
+
+// Q3: Seasonality radar
+new Chart(document.getElementById('chartSeason'), {
+  type: 'radar',
+  data: {
+    labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    datasets: [
+      {
+        label: 'Sydney',
+        data: [null,null,null,null,null,null,null,1070234,1039634,null,1059918,null],
+        borderColor: COLORS.red,
+        backgroundColor: COLORS.red + '22',
+        pointBackgroundColor: COLORS.red,
+      },
+      {
+        label: 'Hunter',
+        data: [null,null,null,null,null,null,null,567257,563245,null,583479,null],
+        borderColor: COLORS.orange,
+        backgroundColor: COLORS.orange + '22',
+        pointBackgroundColor: COLORS.orange,
+      },
+      {
+        label: 'Southern',
+        data: [null,null,null,null,null,null,337031,344548,null,null,327064,null],
+        borderColor: COLORS.yellow,
+        backgroundColor: COLORS.yellow + '22',
+        pointBackgroundColor: COLORS.yellow,
+      },
+      {
+        label: 'Northern',
+        data: [null,null,null,null,null,null,null,null,249260,258816,247075,null],
+        borderColor: COLORS.green,
+        backgroundColor: COLORS.green + '22',
+        pointBackgroundColor: COLORS.green,
+      },
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { labels: { color: '#8b8fa3' } } },
+    scales: {
+      r: {
+        grid: { color: 'rgba(42,45,58,0.6)' },
+        angleLines: { color: 'rgba(42,45,58,0.6)' },
+        pointLabels: { color: '#8b8fa3' },
+        ticks: { color: '#8b8fa3', backdropColor: 'transparent' },
+      }
+    }
+  }
+});
+
+// Stations per region (doughnut)
+new Chart(document.getElementById('chartStations'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Sydney (295)', 'Southern (80)', 'Hunter (73)', 'Northern (30)', 'South West (17)', 'Western (6)'],
+    datasets: [{
+      data: [295, 80, 73, 30, 17, 6],
+      backgroundColor: [COLORS.red, COLORS.yellow, COLORS.orange, COLORS.green, COLORS.blue, COLORS.purple],
+      borderColor: '#1a1d27',
+      borderWidth: 3,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { position: 'right', labels: { color: '#8b8fa3', padding: 12 } },
+    },
+  }
+});
+
+// Pipeline funnel
+new Chart(document.getElementById('chartPipeline'), {
+  type: 'bar',
+  data: {
+    labels: ['Raw Hourly', 'After Cleaning', 'Monthly Aggregated', 'Curated Enriched'],
+    datasets: [{
+      label: 'Records',
+      data: [3925503, 3925503, 61450, 61450],
+      backgroundColor: [COLORS.purple, COLORS.blue, COLORS.green, COLORS.red],
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    ...chartDefaults,
+    plugins: {
+      ...chartDefaults.plugins,
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: ctx => `${ctx.raw.toLocaleString()} records`
+        }
+      }
+    },
+    scales: {
+      ...chartDefaults.scales,
+      y: {
+        ...chartDefaults.scales.y,
+        type: 'logarithmic',
+        title: { display: true, text: 'Records (log scale)', color: '#8b8fa3' },
+        ticks: {
+          ...chartDefaults.scales.y.ticks,
+          callback: v => v >= 1e6 ? (v/1e6)+'M' : v >= 1e3 ? (v/1e3)+'K' : v
+        }
+      }
+    }
+  }
+});
+</script>
+</body>
+</html>

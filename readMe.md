@@ -1,10 +1,14 @@
 # Sydney Traffic Analysis – Spark + HDFS on Docker
 
-Author: Catherine Varas
-Purpose: Run a complete Spark-based Big Data pipeline for Sydney road traffic analytics (2015–2025)
-Environment: Google Cloud VM or local Docker host
+**Author:** Catherine Varas
+**Purpose:** Complete Spark-based Big Data pipeline for Sydney road traffic analytics (2006–2025)
+**Environment:** Google Cloud VM or local Docker host
 
-Containerised big data environment to analyse Sydney road traffic and bus punctuality (2015–2025) using Spark on HDFS, orchestrated with Docker Compose.
+Containerised big data environment to analyse **3.9M+ records** from 711 traffic stations across NSW (2006–2025) using PySpark on HDFS, orchestrated with Docker Compose.
+
+### [📊 View Interactive Dashboard](https://catehey.github.io/traffic-analysis-spark-hdfs-pipeline/dashboard.html)
+
+![Pipeline Architecture](docs/pipeline-arch.png)
 
 ## What this project demonstrates
 
