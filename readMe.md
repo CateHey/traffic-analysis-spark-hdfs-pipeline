@@ -6,7 +6,7 @@
 
 Containerised big data environment to analyse **3.9M+ records** from 711 traffic stations across NSW (2006–2025) using PySpark on HDFS, orchestrated with Docker Compose.
 
-### [📊 View Interactive Dashboard](https://catehey.github.io/traffic-analysis-spark-hdfs-pipeline/dashboard.html)
+### [📊 View Interactive Dashboard](https://traffic-analysis-spark-hdfs-pipeline.vercel.app)
 
 ![Pipeline Architecture](docs/pipeline-arch.png)
 
